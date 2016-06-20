@@ -36,9 +36,6 @@ struct cpu {
 struct cpu *	new_cpu		(int);
 void		reset_cpu	(struct cpu *);
 void		run_cpu		(struct cpu *);
-void		install_exception_handler(struct cpu *, void (*)(struct cpu *, int));
-void		install_inbox_handler	(struct cpu *, int (*)(Word *));
-void		install_outbox_handler	(struct cpu *, int (*)(Word));
 int		load_code		(struct cpu *, unsigned char *, size_t);
 
 #endif

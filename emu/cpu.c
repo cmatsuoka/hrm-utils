@@ -263,21 +263,6 @@ void run_cpu(struct cpu *cpu)
 	}
 }
 
-void install_exception_handler(struct cpu *cpu, void (*handler)(struct cpu *, int))
-{
-	cpu->exception = handler;
-}
-
-void install_inbox_handler(struct cpu *cpu, int (*handler)(Word *))
-{
-	cpu->inbox = handler;
-}
-
-void install_outbox_handler(struct cpu *cpu, int (*handler)(Word))
-{
-	cpu->outbox = handler;
-}
-
 int load_code(struct cpu *cpu, unsigned char *code, size_t n)
 {
 	if (n > HRM_TEXTSIZE) {

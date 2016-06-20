@@ -10,11 +10,12 @@
 2 (MULTI)   SUB    BUMPDN    COPYFROM
 3    -      SUB[]  BUMPDN[]  COPYFROM[]
 
-          
 	  7 .. 4   3 .. 0
 	+--------+--------+ 
 	| instr  |argument| 
 	+--------+--------+
+
+Jump opcodes are followed by a relative jump address
 
 */
 
@@ -61,7 +62,6 @@
 /* Types */
 
 typedef int16_t		Word;
-typedef void *		CPU;
 
 #endif
 

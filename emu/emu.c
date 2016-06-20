@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include "hrm.h"
 #include "cpu.h"
 
@@ -44,9 +45,28 @@ static int outbox(Word val)
 	return 0;
 }
 
+static void usage(char *cmd)
+{
+	printf("Usage: %s [-d]\n", cmd);
+	printf("  -d   show debug information\n");
+}
+
 int main(int argc, char **argv)
 {
 	int datasize = 10;
+	int debug = 0;
+	int o;
+
+	while ((o = getopt(argc, argv, "d")) != -1) {
+		switch (o) {
+		case 'd':
+			debug = 1;
+			break;
+		default:
+			usage(argv[0]);
+			exit(EXIT_SUCCESS);
+		}
+	}
 
 	struct cpu *cpu = new_cpu(datasize);
 	if (cpu == NULL) {
@@ -54,9 +74,10 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	install_exception_handler(cpu, exception);
-	install_inbox_handler(cpu, inbox);
-	install_outbox_handler(cpu, outbox);
+	cpu->debug = debug;
+	cpu->exception = exception;
+	cpu->inbox = inbox;
+	cpu->outbox = outbox;
 
 	if (load_code(cpu, code, sizeof (code)) < 0) {
 		fprintf(stderr, "error: can't load code\n");
