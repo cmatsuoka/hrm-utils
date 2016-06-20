@@ -5,25 +5,6 @@
 #include <setjmp.h>
 #include "hrm.h"
 
-#define DATASIZE 16
-
-struct cpu {
-	uint32_t clock;
-	uint8_t datasize;
-	uint8_t ip;
-	uint8_t flags;
-	uint8_t ir;			/* current instruction */
-	Word dr;			/* data */
-	Word acc;
-	Word data[DATASIZE];
-	uint8_t dest;			/* jump destination */
-	uint8_t *text;
-	int (*inbox)(void);
-	int (*outbox)(void);
-	int (*exception)(struct cpu *, int);
-	jmp_buf jmpbuf;
-};
-
 /* Exception codes */
 
 #define E_DATA_OVERFLOW		(-1)	/* Integer overflow */
@@ -34,6 +15,8 @@ struct cpu {
 #define E_LETTER_ARITH		(-6)	/* Letter in arithmetic operation */
 #define E_OUT_OF_BOUNDS		(-7)	/* Out of bounds indirection */
 
-void	reset		(struct cpu *);
+CPU	new_cpu		(int);
+void	reset_cpu	(CPU);
+void	run_cpu		(CPU);
 
 #endif

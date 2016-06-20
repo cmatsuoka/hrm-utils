@@ -5,6 +5,23 @@
 #include "cpu.h"
 
 
+struct cpu {
+	uint32_t clock;
+	uint8_t datasize;		/* data memory size */
+	uint8_t ip;			/* instruction pointer */
+	uint8_t flags;			/* flags register */
+	uint8_t ir;			/* instruction register */
+	Word dr;			/* data register */
+	Word acc;			/* accumulator */
+	Word data[HRM_DATASIZE];	/* data memory */
+	uint8_t text[HRM_TEXTSIZE];	/* text memory */
+	uint8_t dest;			/* jump destination */
+	int (*inbox)(void);		/* data input callback */
+	int (*outbox)(void);		/* data output callback */
+	int (*exception)(struct cpu *, int);
+	jmp_buf jmpbuf;
+};
+
 static void Exception(struct cpu *cpu, int num)
 {
 	cpu->exception(cpu, num);
@@ -12,39 +29,7 @@ static void Exception(struct cpu *cpu, int num)
 }
 
 
-struct cpu *new_cpu(int datasize)
-{
-	struct cpu *cpu;
-
-	if ((cpu = malloc(sizeof (struct cpu))) == NULL) {
-		goto err;
-	}
-
-	cpu->datasize = datasize;
-
-	reset(cpu);
-
-	return cpu;
-
-    err:
-	return NULL;
-}
-
-
-void reset(struct cpu *cpu)
-{
-	int i;
-
-	memset(cpu, 0, sizeof (struct cpu));
-
-	cpu->acc = EMPTY;
-
-	for (i = 0; i < cpu->datasize; i++) {
-		cpu->data[i] = EMPTY;
-	}
-}
-
-void read_instruction(struct cpu *cpu)
+static void read_instruction(struct cpu *cpu)
 {
 	cpu->ir = cpu->text[cpu->ip++];
 
@@ -53,7 +38,7 @@ void read_instruction(struct cpu *cpu)
 	}
 }
 
-void read_data(struct cpu *cpu)
+static void read_data(struct cpu *cpu)
 {
 	Word data;
 
@@ -87,7 +72,7 @@ void read_data(struct cpu *cpu)
 	
 }
 
-void execute(struct cpu *cpu)
+static void execute(struct cpu *cpu)
 {
 	switch (cpu->ir & 0xe0) {
 	case JUMP:
@@ -153,7 +138,7 @@ void execute(struct cpu *cpu)
 	}
 }
 
-void cpu_cycle(struct cpu *cpu)
+static void cpu_cycle(struct cpu *cpu)
 {
 	read_instruction(cpu);
 	read_data(cpu);
@@ -161,8 +146,45 @@ void cpu_cycle(struct cpu *cpu)
 	cpu->clock++;
 }
 
-void run_cpu(struct cpu *cpu)
+/* Public calls */
+
+CPU new_cpu(int datasize)
 {
+	struct cpu *cpu;
+
+	if ((cpu = malloc(sizeof (struct cpu))) == NULL) {
+		goto err;
+	}
+
+	cpu->datasize = datasize;
+
+	reset_cpu(cpu);
+
+	return (CPU)cpu;
+
+    err:
+	return NULL;
+}
+
+
+void reset_cpu(CPU c)
+{
+	struct cpu *cpu = (struct cpu *)c;
+	int i;
+
+	memset(cpu, 0, sizeof (struct cpu));
+
+	cpu->acc = EMPTY;
+
+	for (i = 0; i < cpu->datasize; i++) {
+		cpu->data[i] = EMPTY;
+	}
+}
+
+void run_cpu(CPU c)
+{
+	struct cpu *cpu = (struct cpu *)c;
+
 	if (setjmp(cpu->jmpbuf) < 0) {
 		return;
 	}

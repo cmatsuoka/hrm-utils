@@ -54,6 +54,9 @@
 
 /* Limits and tests */
 
+#define HRM_DATASIZE	16		/* data memory size (in words) */
+#define HRM_TEXTSIZE	256		/* text memory size (in bytes) */
+
 #define MIN_NUMBER	-999
 #define MAX_NUMBER	999
 #define MIN_LETTER	(MAX_NUMBER + 1)
