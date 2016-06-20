@@ -31,6 +31,7 @@ static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 
 static void read_instruction(struct cpu *cpu)
 {
+	cpu->last_ip = cpu->ip;
 	cpu->ir = cpu->text[cpu->ip++];
 
 	if ((cpu->ir & 0xf0) == JUMP) {

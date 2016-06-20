@@ -21,7 +21,7 @@ static void exception(struct cpu *cpu, int num)
 		desc = ex[num];
 	}
 
-	printf("received exception %d! (%s)\n", num, desc);
+	printf("** Exception %d (%s) IP=%d\n", num, desc, cpu->last_ip);
 }
 
 static int inbox(Word *val)

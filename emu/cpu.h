@@ -11,11 +11,12 @@ struct cpu {
 	uint8_t ip;			/* instruction pointer */
 	uint8_t flags;			/* flags register */
 	uint8_t ir;			/* instruction register */
-	Word dr;			/* data register */
+	uint8_t dr;			/* data register */
+	uint8_t dest;			/* jump destination */
+	uint8_t last_ip;
 	Word acc;			/* accumulator */
 	Word data[HRM_DATASIZE];	/* data memory */
 	uint8_t text[HRM_TEXTSIZE];	/* text memory */
-	uint8_t dest;			/* jump destination */
 	int (*inbox)(Word *);		/* data input callback */
 	int (*outbox)(Word);		/* data output callback */
 	void (*exception)(struct cpu *, int);
