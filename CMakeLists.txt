@@ -4,4 +4,5 @@ project(hrm_utils)
 
 include_directories(include)
 
+add_subdirectory(hasm)
 add_subdirectory(emu)
