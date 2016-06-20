@@ -33,15 +33,13 @@ static void read_instruction(struct cpu *cpu)
 {
 	cpu->ir = cpu->text[cpu->ip++];
 
-	if (cpu->ir & 0xf0 == JUMP) {
+	if ((cpu->ir & 0xf0) == JUMP) {
 		cpu->dest = cpu->text[cpu->ip++];
 	}
 }
 
-static void read_data(struct cpu *cpu)
+static void read_data_address(struct cpu *cpu)
 {
-	Word data;
-
 	switch (cpu->ir & 0xf0) {
 	case RSVD1:
 	case RSVD2:
@@ -52,28 +50,24 @@ static void read_data(struct cpu *cpu)
 		/* no data */
 		break;
 	default: {
-		Word data = cpu->data[cpu->ir & 0x0f];
-
-		if (IS_EMPTY(data)) {
-			Exception(cpu, E_EMPTY_DATA);
-		}
-
+		uint8_t addr = cpu->ir & 0x0f;
+		
 		if (cpu->ir & 0x10) {
-			if (data >= cpu->datasize) {
+			if (addr >= cpu->datasize) {
 				Exception(cpu, E_OUT_OF_BOUNDS);
 			}
-			cpu->dr = cpu->data[data];
-			break;
+			cpu->dr = cpu->data[addr];
 		} else {
-			cpu->dr = data;
+			cpu->dr = addr;
 		}
 		break; }
 	}
-	
 }
 
 static void execute(struct cpu *cpu)
 {
+	Word data;
+
 	if (cpu->debug) {
 		char buf[50];
 		format_opcode(cpu, buf, 50);
@@ -86,45 +80,32 @@ static void execute(struct cpu *cpu)
 	case IO:
 		break;
 	case ADD:
-		if (IS_EMPTY(cpu->acc)) {
-			Exception(cpu, E_EMPTY_ACC);
-		}
-		if (!IS_NUMBER(cpu->acc) || !IS_NUMBER(cpu->dr)) {
-			Exception(cpu, E_LETTER_ARITH);
-		}
-
-		cpu->acc += cpu->dr;
-		break;
 	case SUB:
+		data = cpu->data[cpu->dr];
+
 		if (IS_EMPTY(cpu->acc)) {
 			Exception(cpu, E_EMPTY_ACC);
 		}
-		if (!IS_NUMBER(cpu->acc) || !IS_NUMBER(cpu->dr)) {
+		if (!IS_NUMBER(cpu->acc) || !IS_NUMBER(data)) {
 			Exception(cpu, E_LETTER_ARITH);
 		}
 
-		cpu->acc -= cpu->dr;
+		if ((cpu->ir & 0xe0) == ADD) {
+			cpu->acc += data;
+		} else {
+			cpu->acc -= data;
+		}
 		break;
 	case BUMPUP:
-		if (!IS_NUMBER(cpu->dr)) {
-			Exception(cpu, E_EMPTY_ACC);
-		}
-
-		if (cpu->ir & 0x10) {
-			cpu->acc = ++cpu->data[cpu->data[cpu->ir & 0x0f]];
-		} else {
-			cpu->acc = ++cpu->data[cpu->ir & 0x0f];
-		}
-		break;
 	case BUMPDN:
-		if (!IS_NUMBER(cpu->dr)) {
-			Exception(cpu, E_EMPTY_ACC);
+		if (!IS_NUMBER(cpu->data[cpu->dr])) {
+			Exception(cpu, E_EMPTY_DATA);
 		}
 
-		if (cpu->ir & 0x10) {
-			cpu->acc = --cpu->data[cpu->data[cpu->ir & 0x0f]];
+		if ((cpu->ir & 0xe0) == BUMPUP) {
+			cpu->acc = ++cpu->data[cpu->dr];
 		} else {
-			cpu->acc = --cpu->data[cpu->ir & 0x0f];
+			cpu->acc = --cpu->data[cpu->dr];
 		}
 		break;
 	case COPYTO:
@@ -132,14 +113,10 @@ static void execute(struct cpu *cpu)
 			Exception(cpu, E_EMPTY_ACC);
 		}
 
-		if (cpu->ir & 0x10) {
-			cpu->data[cpu->data[cpu->ir & 0x0f]] = cpu->acc;
-		} else {
-			cpu->data[cpu->ir & 0x0f] = cpu->acc;
-		}
+		cpu->data[cpu->dr] = cpu->acc;
 		break;
 	case COPYFROM:
-		cpu->acc = cpu->dr;
+		cpu->acc = cpu->data[cpu->dr];
 		break;
 	}
 }
@@ -147,7 +124,7 @@ static void execute(struct cpu *cpu)
 static void cpu_cycle(struct cpu *cpu)
 {
 	read_instruction(cpu);
-	read_data(cpu);
+	read_data_address(cpu);
 	execute(cpu);
 	cpu->clock++;
 }

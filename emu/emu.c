@@ -28,11 +28,13 @@ static int inbox(Word *val)
 {
 	*val = 0;
 	printf("INBOX: %d\n", *val);
+	return 0;
 }
 
 static int outbox(Word val)
 {
 	printf("OUTBOX: %d\n", val);
+	return 0;
 }
 
 int main(int argc, char **argv)
