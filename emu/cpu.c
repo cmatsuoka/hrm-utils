@@ -160,7 +160,9 @@ static void execute(struct cpu *cpu)
 			cpu->acc = EMPTY;
 		} else {
 			Word val;
-			cpu->inbox(&val);
+			if (!cpu->inbox(&val)) {
+				Exception(cpu, E_END_OF_EXECUTION);
+			}
 			cpu->acc = val;
 		}
 	} else switch (cpu->ir & 0xe0) {
@@ -208,10 +210,10 @@ static void execute(struct cpu *cpu)
 
 static void cpu_cycle(struct cpu *cpu)
 {
+	cpu->clock++;
 	read_instruction(cpu);
 	read_data_address(cpu);
 	execute(cpu);
-	cpu->clock++;
 }
 
 /* Public calls */

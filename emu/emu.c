@@ -35,8 +35,7 @@ static int inbox(Word *val)
 {
 	printf("INBOX: ");
 	fflush(stdout);
-	scanf("%hd", val);
-	return 0;
+	return scanf("%hd", val) == 1;
 }
 
 static int outbox(Word val)
@@ -87,6 +86,8 @@ int main(int argc, char **argv)
 	cpu->data[9] = 0;
 
 	run_cpu(cpu);
+
+	printf("Executed %d instructions\n", cpu->clock);
 	
 	exit(EXIT_SUCCESS);
 }
