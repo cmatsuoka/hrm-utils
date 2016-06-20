@@ -16,10 +16,6 @@
 	| instr  |argument| 
 	+--------+--------+
 
-
-1  N .. negative
-0  Z .. zero
-
 */
 
 /* Opcodes */
@@ -46,11 +42,6 @@
 #define COPYTOI		0xd0
 #define COPYFROM	0xe0
 #define COPYFROMI	0xf0
-
-/* Flags */
-
-#define FLAG_ZERO	(1 << 0)
-#define FLAG_NEGATIVE	(1 << 1)
 
 /* Limits and tests */
 

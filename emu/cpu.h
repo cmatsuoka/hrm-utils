@@ -9,7 +9,6 @@ struct cpu {
 	uint32_t clock;
 	uint8_t datasize;		/* data memory size */
 	uint8_t ip;			/* instruction pointer */
-	uint8_t flags;			/* flags register */
 	uint8_t ir;			/* instruction register */
 	uint8_t dr;			/* data register */
 	int8_t dest;			/* jump destination */

@@ -63,6 +63,8 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	cpu->data[9] = 0;
+
 	run_cpu(cpu);
 	
 	exit(EXIT_SUCCESS);

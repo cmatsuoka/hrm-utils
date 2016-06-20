@@ -132,11 +132,11 @@ static void execute(struct cpu *cpu)
 		format_opcode(cpu, buf, 50);
 		format_word(cpu->acc, s, 10);
 
-		printf("%3d  %-24.24s %-4.4s  |  ", cpu->last_ip, buf, s);
+		printf("%3d  %-20.20s %4.4s  | ", cpu->last_ip, buf, s);
 
 		for (int i = 0; i < cpu->datasize; i++) {
 			format_word(cpu->data[i], s, 10);
-			printf("%-4.4s", s);
+			printf("%4.4s", s);
 		}
 		printf("\n");
 	}
@@ -224,9 +224,9 @@ struct cpu *new_cpu(int datasize)
 		goto err;
 	}
 
-	reset_cpu(cpu);
-
 	cpu->datasize = datasize;
+
+	reset_cpu(cpu);
 
 	return cpu;
 
@@ -239,10 +239,13 @@ void reset_cpu(struct cpu *cpu)
 {
 	int i;
 
-	memset(cpu, 0, sizeof (struct cpu));
-
 	cpu->acc = EMPTY;
+	cpu->clock = 0;
 	cpu->debug = 1;
+	cpu->ip = 0;
+	cpu->ir = 0;
+	cpu->dr = 0;
+	cpu->last_ip = 0;
 
 	for (i = 0; i < cpu->datasize; i++) {
 		cpu->data[i] = EMPTY;
