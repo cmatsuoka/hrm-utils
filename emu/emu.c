@@ -35,7 +35,6 @@ static int inbox(Word *val)
 	printf("INBOX: ");
 	fflush(stdout);
 	scanf("%hd", val);
-	printf("\n");
 	return 0;
 }
 
