@@ -16,7 +16,7 @@ static char *ex[] = {
 // Fibonacci code
 static uint8_t code[] = {
 	0x89, 0x21, 0xc0, 0xe9, 0xc1, 0xc2, 0x20, 0xe0, 0x62,
-	0x12, 0xf6, 0xe1, 0x41, 0xc2, 0x61, 0xc1, 0x10, 0xf4
+	0x12, 0xf6, 0xe1, 0x42, 0xc2, 0x61, 0xc1, 0x10, 0xf4
 };
  
 static void exception(struct cpu *cpu, int num)
@@ -32,8 +32,10 @@ static void exception(struct cpu *cpu, int num)
 
 static int inbox(Word *val)
 {
-	*val = 0;
-	printf("INBOX: %d\n", *val);
+	printf("INBOX: ");
+	fflush(stdout);
+	scanf("%hd", val);
+	printf("\n");
 	return 0;
 }
 
@@ -45,7 +47,7 @@ static int outbox(Word val)
 
 int main(int argc, char **argv)
 {
-	int datasize = 16;
+	int datasize = 10;
 
 	struct cpu *cpu = new_cpu(datasize);
 	if (cpu == NULL) {

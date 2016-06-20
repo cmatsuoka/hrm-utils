@@ -29,7 +29,7 @@ Example HRM assembly code from level 22 (Fibonacci Visitor)::
       8  62          SUB      2
       9  12 F6       JUMPN    a
      11  E1          COPYFROM 1
-     12  41          ADD      2
+     12  42          ADD      2
      13  C2          COPYTO   2
      14  61          SUB      1
      15  C1          COPYTO   1

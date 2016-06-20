@@ -110,21 +110,60 @@ static void read_data_address(struct cpu *cpu)
 	}
 }
 
+static void format_word(Word val, char *buf, size_t n)
+{
+	if (IS_EMPTY(val)) {
+		snprintf(buf, n, "-");
+	} else if (IS_NUMBER(val)) {
+		snprintf(buf, n, "%d", val);
+	} else if (IS_LETTER(val)) {
+		snprintf(buf, n, "%c", LETTER(val));
+	} else {
+		snprintf(buf, n, "?");	
+	}
+}
+
 static void execute(struct cpu *cpu)
 {
 	Word data;
 
 	if (cpu->debug) {
-		char buf[50];
+		char buf[50], s[10];
 		format_opcode(cpu, buf, 50);
-		printf("%3d  %s\n", cpu->last_ip, buf);
+		format_word(cpu->acc, s, 10);
+
+		printf("%3d  %-24.24s %-4.4s  |  ", cpu->last_ip, buf, s);
+
+		for (int i = 0; i < cpu->datasize; i++) {
+			format_word(cpu->data[i], s, 10);
+			printf("%-4.4s", s);
+		}
+		printf("\n");
 	}
 
-	switch (cpu->ir & 0xe0) {
-	case JUMP:
-		break;
-	case IO:
-		break;
+	if ((cpu->ir & 0xf0) == JUMP) {
+		if (cpu->ir == JUMP) {
+			cpu->ip += cpu->dest;
+		} else {
+			if (!IS_NUMBER(cpu->acc)) {
+				Exception(cpu, E_LETTER_ARITH);
+			}
+			if (cpu->ir == JUMPZ && cpu->acc == 0) {
+				cpu->ip += cpu->dest;
+			} else if (cpu->ir == JUMPN && cpu->acc < 0) {
+				cpu->ip += cpu->dest;
+			}
+		}
+	} else if ((cpu->ir & 0xf0) == OUTBOX) {
+		if (cpu->ir == OUTBOX) {
+			cpu->outbox(cpu->acc);
+			cpu->acc = EMPTY;
+		} else {
+			Word val;
+			cpu->inbox(&val);
+			cpu->acc = val;
+		}
+	} else switch (cpu->ir & 0xe0) {
 	case ADD:
 	case SUB:
 		data = cpu->data[cpu->dr];
@@ -185,9 +224,9 @@ struct cpu *new_cpu(int datasize)
 		goto err;
 	}
 
-	cpu->datasize = datasize;
-
 	reset_cpu(cpu);
+
+	cpu->datasize = datasize;
 
 	return cpu;
 
