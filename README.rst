@@ -12,7 +12,7 @@ The machine code uses one byte opcodes (with an additional byte for jump
 instructions) and operates with a 256-byte code memory and a 16-word
 data memory.
 
-Example HRM assembly code from level 22 (Fibonacci Visitor):
+Example HRM assembly code from level 22 (Fibonacci Visitor)::
 
     -- HUMAN RESOURCE MACHINE PROGRAM --
     
