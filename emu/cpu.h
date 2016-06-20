@@ -12,7 +12,7 @@ struct cpu {
 	uint8_t flags;			/* flags register */
 	uint8_t ir;			/* instruction register */
 	uint8_t dr;			/* data register */
-	uint8_t dest;			/* jump destination */
+	int8_t dest;			/* jump destination */
 	uint8_t last_ip;
 	Word acc;			/* accumulator */
 	Word data[HRM_DATASIZE];	/* data memory */

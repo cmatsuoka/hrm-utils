@@ -13,19 +13,64 @@ static void Exception(struct cpu *cpu, int num)
 
 static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 {
-	switch (cpu->ir & 0xf0) {
-	case RSVD1:
-	case RSVD2:
-		break;
-	case JUMP:
-		break;
-	case IO:
-		break;
-	default:
-		break;
+	if ((cpu->ir & 0xf0) == JUMP) {
+		snprintf(buf, n, "%02X %02X    ", cpu->ir, cpu->dest & 0xff);
+		switch (cpu->ir) {
+		case JUMP:
+			strncat(buf, "JUMP     ", n);
+			break;
+		case JUMPZ:
+			strncat(buf, "JUMPZ    ", n);
+			break;
+		case JUMPN:
+			strncat(buf, "JUMPN    ", n);
+			break;
+		}
+		char s[10];
+		snprintf(s, 10, "%d", cpu->ip + cpu->dest);
+		strncat(buf, s, n); 
+	} else if ((cpu->ir & 0xf0) == OUTBOX) {
+		snprintf(buf, n, "%02X       ", cpu->ir);
+		switch (cpu->ir & 0xe0) {
+		case OUTBOX:
+			strncat(buf, "OUTBOX", n);
+			break;
+		case INBOX:
+			strncat(buf, "INBOX", n);
+			break;
+		}
+	} else {
+		snprintf(buf, n, "%02X       ", cpu->ir);
+		switch (cpu->ir & 0xe0) {
+		case ADD:
+			strncat(buf, "ADD     ", n);
+			break;
+		case SUB:
+			strncat(buf, "SUB     ", n);
+			break;
+		case BUMPUP:
+			strncat(buf, "BUMPUP  ", n);
+			break;
+		case BUMPDN:
+			strncat(buf, "BUMPDN  ", n);
+			break;
+		case COPYTO:
+			strncat(buf, "COPYTO  ", n);
+			break;
+		case COPYFROM:
+			strncat(buf, "COPYFROM", n);
+			break;
+		}
+
+		char s[10];
+		if (cpu->ir & 0x10) {
+			snprintf(s, 10, " [%d]", cpu->dr);
+		} else {
+			snprintf(s, 10, " %d", cpu->dr);
+		}
+		strncat(buf, s, n);
 	}
 
-	snprintf(buf, n, "%02x", cpu->ir);
 
 }
 
