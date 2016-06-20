@@ -13,6 +13,12 @@ static char *ex[] = {
 	[E_OUT_OF_BOUNDS]	= "Out of bounds indirection",
 };
 
+// Fibonacci code
+static uint8_t code[] = {
+	0x89, 0x21, 0xc0, 0xe9, 0xc1, 0xc2, 0x20, 0xe0, 0x62,
+	0x12, 0xf6, 0xe1, 0x41, 0xc2, 0x61, 0xc1, 0x10, 0xf4
+};
+ 
 static void exception(struct cpu *cpu, int num)
 {
 	char *desc = "unknown";
@@ -50,6 +56,11 @@ int main(int argc, char **argv)
 	install_exception_handler(cpu, exception);
 	install_inbox_handler(cpu, inbox);
 	install_outbox_handler(cpu, outbox);
+
+	if (load_code(cpu, code, sizeof (code)) < 0) {
+		fprintf(stderr, "error: can't load code\n");
+		exit(EXIT_FAILURE);
+	}
 
 	run_cpu(cpu);
 	

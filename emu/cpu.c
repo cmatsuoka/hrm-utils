@@ -72,7 +72,7 @@ static void execute(struct cpu *cpu)
 	if (cpu->debug) {
 		char buf[50];
 		format_opcode(cpu, buf, 50);
-		printf("%3d %s\n", cpu->ip, buf);
+		printf("%3d  %s\n", cpu->last_ip, buf);
 	}
 
 	switch (cpu->ir & 0xe0) {
@@ -189,4 +189,15 @@ void install_inbox_handler(struct cpu *cpu, int (*handler)(Word *))
 void install_outbox_handler(struct cpu *cpu, int (*handler)(Word))
 {
 	cpu->outbox = handler;
+}
+
+int load_code(struct cpu *cpu, unsigned char *code, size_t n)
+{
+	if (n > HRM_TEXTSIZE) {
+		return -1;
+	}
+
+	memcpy(cpu->text, code, n);
+
+	return 0;
 }

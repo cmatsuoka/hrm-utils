@@ -14,25 +14,25 @@ data memory.
 
 Example HRM assembly code from level 22 (Fibonacci Visitor)::
 
-    -- HUMAN RESOURCE MACHINE PROGRAM --
-    
-        BUMPUP   9
-    a:
-        INBOX   
-        COPYTO   0
-        COPYFROM 9
-        COPYTO   1
-        COPYTO   2
-    b:
-        OUTBOX  
-        COPYFROM 0
-        SUB      2
-        JUMPN    a
-        COPYFROM 1
-        ADD      2
-        COPYTO   2
-        SUB      1
-        COPYTO   1
-        JUMP     b
-    
-    
+    hrm code     -- HUMAN RESOURCE MACHINE PROGRAM --
+               
+      0  89          BUMPUP   9
+                 a:
+      1  21          INBOX   
+      2  C0          COPYTO   0
+      3  E9          COPYFROM 9
+      4  C1          COPYTO   1
+      5  C2          COPYTO   2
+                 b:
+      6  20          OUTBOX  
+      7  E0          COPYFROM 0
+      8  62          SUB      2
+      9  12 F6       JUMPN    a
+     11  E1          COPYFROM 1
+     12  41          ADD      2
+     13  C2          COPYTO   2
+     14  61          SUB      1
+     15  C1          COPYTO   1
+     16  10 F4       JUMP     b
+               
+        
