@@ -5,29 +5,29 @@
 #include "cpu.h"
 
 
-struct cpu {
-	uint32_t clock;
-	uint8_t datasize;		/* data memory size */
-	uint8_t ip;			/* instruction pointer */
-	uint8_t flags;			/* flags register */
-	uint8_t ir;			/* instruction register */
-	Word dr;			/* data register */
-	Word acc;			/* accumulator */
-	Word data[HRM_DATASIZE];	/* data memory */
-	uint8_t text[HRM_TEXTSIZE];	/* text memory */
-	uint8_t dest;			/* jump destination */
-	int (*inbox)(void);		/* data input callback */
-	int (*outbox)(void);		/* data output callback */
-	int (*exception)(struct cpu *, int);
-	jmp_buf jmpbuf;
-};
-
 static void Exception(struct cpu *cpu, int num)
 {
 	cpu->exception(cpu, num);
 	longjmp(cpu->jmpbuf, num);
 }
 
+static void format_opcode(struct cpu *cpu, char *buf, size_t n)
+{
+	switch (cpu->ir & 0xf0) {
+	case RSVD1:
+	case RSVD2:
+		break;
+	case JUMP:
+		break;
+	case IO:
+		break;
+	default:
+		break;
+	}
+
+	snprintf(buf, n, "%02x", cpu->ir);
+
+}
 
 static void read_instruction(struct cpu *cpu)
 {
@@ -74,6 +74,12 @@ static void read_data(struct cpu *cpu)
 
 static void execute(struct cpu *cpu)
 {
+	if (cpu->debug) {
+		char buf[50];
+		format_opcode(cpu, buf, 50);
+		printf("%3d %s\n", cpu->ip, buf);
+	}
+
 	switch (cpu->ir & 0xe0) {
 	case JUMP:
 		break;
@@ -148,7 +154,7 @@ static void cpu_cycle(struct cpu *cpu)
 
 /* Public calls */
 
-CPU new_cpu(int datasize)
+struct cpu *new_cpu(int datasize)
 {
 	struct cpu *cpu;
 
@@ -160,36 +166,49 @@ CPU new_cpu(int datasize)
 
 	reset_cpu(cpu);
 
-	return (CPU)cpu;
+	return cpu;
 
     err:
 	return NULL;
 }
 
 
-void reset_cpu(CPU c)
+void reset_cpu(struct cpu *cpu)
 {
-	struct cpu *cpu = (struct cpu *)c;
 	int i;
 
 	memset(cpu, 0, sizeof (struct cpu));
 
 	cpu->acc = EMPTY;
+	cpu->debug = 1;
 
 	for (i = 0; i < cpu->datasize; i++) {
 		cpu->data[i] = EMPTY;
 	}
 }
 
-void run_cpu(CPU c)
+void run_cpu(struct cpu *cpu)
 {
-	struct cpu *cpu = (struct cpu *)c;
-
-	if (setjmp(cpu->jmpbuf) < 0) {
+	if (setjmp(cpu->jmpbuf) != 0) {
 		return;
 	}
 
 	while (42) {
 		cpu_cycle(cpu);
 	}
+}
+
+void install_exception_handler(struct cpu *cpu, void (*handler)(struct cpu *, int))
+{
+	cpu->exception = handler;
+}
+
+void install_inbox_handler(struct cpu *cpu, int (*handler)(Word *))
+{
+	cpu->inbox = handler;
+}
+
+void install_outbox_handler(struct cpu *cpu, int (*handler)(Word))
+{
+	cpu->outbox = handler;
 }
