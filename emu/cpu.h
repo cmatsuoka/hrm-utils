@@ -9,13 +9,12 @@ struct cpu {
 	uint32_t clock;
 	uint8_t datasize;		/* data memory size */
 	uint8_t ip;			/* instruction pointer */
-	uint8_t ir;			/* instruction register */
-	uint8_t dr;			/* data register */
-	int8_t dest;			/* jump destination */
 	uint8_t last_ip;
+	uint8_t dr;			/* data register */
+	Word ir;			/* instruction register */
 	Word acc;			/* accumulator */
 	Word data[HRM_DATASIZE];	/* data memory */
-	uint8_t text[HRM_TEXTSIZE];	/* text memory */
+	Word text[HRM_TEXTSIZE];	/* text memory */
 	int (*inbox)(Word *);		/* data input callback */
 	int (*outbox)(Word);		/* data output callback */
 	void (*exception)(struct cpu *, int);
@@ -36,6 +35,6 @@ struct cpu {
 struct cpu *	new_cpu		(int);
 void		reset_cpu	(struct cpu *);
 void		run_cpu		(struct cpu *);
-int		load_code		(struct cpu *, unsigned char *, size_t);
+int		load_code	(struct cpu *, unsigned char *, size_t);
 
 #endif

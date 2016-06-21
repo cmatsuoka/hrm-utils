@@ -4,5 +4,7 @@ project(hrm_utils)
 
 include_directories(include)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 add_subdirectory(hasm)
 add_subdirectory(emu)

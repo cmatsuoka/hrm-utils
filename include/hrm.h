@@ -3,51 +3,34 @@
 
 #include <stdint.h>
 
-/*
-     0        1        2        3 
-0    -      ADD    BUMPUP    COPYTO
-1 (JUMP)    ADD[]  BUMPUP[]  COPYTO[]
-2 (MULTI)   SUB    BUMPDN    COPYFROM
-3    -      SUB[]  BUMPDN[]  COPYFROM[]
-
-	  7 .. 4   3 .. 0
-	+--------+--------+ 
-	| instr  |argument| 
-	+--------+--------+
-
-Jump opcodes are followed by a relative jump address
-
-*/
-
 /* Opcodes */
 
-#define RSVD1		0x00
-#define JUMP		0x10
-#define JUMPZ		0x11
-#define JUMPN		0x12
-#define CALL		0x18		/* not implemented */
-#define IO		0x20
-#define OUTBOX		0x20
-#define INBOX		0x21
-#define RET		0x28		/* not implemented */
-#define RSVD2		0x30
-#define ADD		0x40
-#define ADDI		0x50
-#define SUB		0x60
-#define SUBI		0x70
-#define	BUMPUP		0x80
-#define	BUMPUPI		0x90
-#define BUMPDN		0xa0
-#define BUMPDNI		0xb0
-#define COPYTO		0xc0
-#define COPYTOI		0xd0
-#define COPYFROM	0xe0
-#define COPYFROMI	0xf0
+#define OUTBOX		0x4000
+#define INBOX		0x4100
+#define JUMP		0x2000
+#define JUMPZ		0x2100
+#define JUMPN		0x2200
+#define ADD		0x0100
+#define ADDI		0x1100
+#define SUB		0x0200
+#define SUBI		0x1200
+#define	BUMPUP		0x0300
+#define	BUMPUPI		0x1300
+#define BUMPDN		0x0400
+#define BUMPDNI		0x1400
+#define COPYTO		0x0500
+#define COPYTOI		0x1500
+#define COPYFROM	0x0600
+#define COPYFROMI	0x1600
+
+#define IO_MASK		0x4000
+#define JUMP_MASK	0x2000
+#define INDIRECT_MASK	0x1000
 
 /* Limits and tests */
 
-#define HRM_DATASIZE	16		/* data memory size (in words) */
-#define HRM_TEXTSIZE	256		/* text memory size (in bytes) */
+#define HRM_DATASIZE	256		/* data memory size (in words) */
+#define HRM_TEXTSIZE	256		/* text memory size (in words) */
 
 #define MIN_NUMBER	-999
 #define MAX_NUMBER	999

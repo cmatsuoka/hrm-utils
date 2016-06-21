@@ -13,9 +13,11 @@ static void Exception(struct cpu *cpu, int num)
 
 static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 {
-	if ((cpu->ir & 0xf0) == JUMP) {
-		snprintf(buf, n, "%02X %02X    ", cpu->ir, cpu->dest & 0xff);
-		switch (cpu->ir) {
+	Word ins = cpu->ir & 0xff00;
+
+	if (ins & JUMP_MASK) {
+		snprintf(buf, n, "%02X %02X    ", cpu->ir >> 8, cpu->dr);
+		switch (ins) {
 		case JUMP:
 			strncat(buf, "JUMP     ", n);
 			break;
@@ -27,11 +29,11 @@ static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 			break;
 		}
 		char s[10];
-		snprintf(s, 10, "%d", cpu->ip + cpu->dest);
+		snprintf(s, 10, "%d", cpu->ip + cpu->dr);
 		strncat(buf, s, n); 
-	} else if ((cpu->ir & 0xf0) == OUTBOX) {
-		snprintf(buf, n, "%02X       ", cpu->ir);
-		switch (cpu->ir & 0xe0) {
+	} else if (ins & IO_MASK) {
+		snprintf(buf, n, "%02X 00    ", cpu->ir >> 8);
+		switch (ins) {
 		case OUTBOX:
 			strncat(buf, "OUTBOX", n);
 			break;
@@ -40,8 +42,8 @@ static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 			break;
 		}
 	} else {
-		snprintf(buf, n, "%02X       ", cpu->ir);
-		switch (cpu->ir & 0xe0) {
+		snprintf(buf, n, "%02X %02X    ", cpu->ir >> 8, cpu->ir & 0xff);
+		switch (ins & ~INDIRECT_MASK) {
 		case ADD:
 			strncat(buf, "ADD     ", n);
 			break;
@@ -63,7 +65,7 @@ static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 		}
 
 		char s[10];
-		if (cpu->ir & 0x10) {
+		if (ins & INDIRECT_MASK) {
 			snprintf(s, 10, " [%d]", cpu->dr);
 		} else {
 			snprintf(s, 10, " %d", cpu->dr);
@@ -78,27 +80,14 @@ static void read_instruction(struct cpu *cpu)
 {
 	cpu->last_ip = cpu->ip;
 	cpu->ir = cpu->text[cpu->ip++];
-
-	if ((cpu->ir & 0xf0) == JUMP) {
-		cpu->dest = cpu->text[cpu->ip++];
-	}
 }
 
 static void read_data_address(struct cpu *cpu)
 {
-	switch (cpu->ir & 0xf0) {
-	case RSVD1:
-	case RSVD2:
-		Exception(cpu, E_ILLEGAL_INS);
-		break;
-	case JUMP:
-	case IO:
-		/* no data */
-		break;
-	default: {
-		uint8_t addr = cpu->ir & 0x0f;
+	if (~cpu->ir & IO_MASK) {
+		uint8_t addr = cpu->ir & 0xff;
 		
-		if (cpu->ir & 0x10) {
+		if (cpu->ir & INDIRECT_MASK) {
 			if (addr >= cpu->datasize) {
 				Exception(cpu, E_OUT_OF_BOUNDS);
 			}
@@ -106,7 +95,6 @@ static void read_data_address(struct cpu *cpu)
 		} else {
 			cpu->dr = addr;
 		}
-		break; }
 	}
 }
 
@@ -141,21 +129,23 @@ static void execute(struct cpu *cpu)
 		printf("\n");
 	}
 
-	if ((cpu->ir & 0xf0) == JUMP) {
-		if (cpu->ir == JUMP) {
-			cpu->ip += cpu->dest;
+	Word ins = cpu->ir & 0xff00;
+
+	if (cpu->ir & JUMP_MASK) {
+		if (ins == JUMP) {
+			cpu->ip += cpu->dr;
 		} else {
 			if (!IS_NUMBER(cpu->acc)) {
 				Exception(cpu, E_LETTER_ARITH);
 			}
-			if (cpu->ir == JUMPZ && cpu->acc == 0) {
-				cpu->ip += cpu->dest;
-			} else if (cpu->ir == JUMPN && cpu->acc < 0) {
-				cpu->ip += cpu->dest;
+			if (ins == JUMPZ && cpu->acc == 0) {
+				cpu->ip += cpu->dr;
+			} else if (ins == JUMPN && cpu->acc < 0) {
+				cpu->ip += cpu->dr;
 			}
 		}
-	} else if ((cpu->ir & 0xf0) == OUTBOX) {
-		if (cpu->ir == OUTBOX) {
+	} else if (cpu->ir & IO_MASK) {
+		if (ins == OUTBOX) {
 			cpu->outbox(cpu->acc);
 			cpu->acc = EMPTY;
 		} else {
@@ -165,7 +155,7 @@ static void execute(struct cpu *cpu)
 			}
 			cpu->acc = val;
 		}
-	} else switch (cpu->ir & 0xe0) {
+	} else switch (ins &= ~INDIRECT_MASK) {
 	case ADD:
 	case SUB:
 		data = cpu->data[cpu->dr];
@@ -177,7 +167,7 @@ static void execute(struct cpu *cpu)
 			Exception(cpu, E_LETTER_ARITH);
 		}
 
-		if ((cpu->ir & 0xe0) == ADD) {
+		if (ins == ADD) {
 			cpu->acc += data;
 		} else {
 			cpu->acc -= data;
@@ -189,7 +179,7 @@ static void execute(struct cpu *cpu)
 			Exception(cpu, E_EMPTY_DATA);
 		}
 
-		if ((cpu->ir & 0xe0) == BUMPUP) {
+		if (ins == BUMPUP) {
 			cpu->acc = ++cpu->data[cpu->dr];
 		} else {
 			cpu->acc = --cpu->data[cpu->dr];
@@ -243,7 +233,7 @@ void reset_cpu(struct cpu *cpu)
 
 	cpu->acc = EMPTY;
 	cpu->clock = 0;
-	cpu->debug = 1;
+	cpu->debug = 0;
 	cpu->ip = 0;
 	cpu->ir = 0;
 	cpu->dr = 0;
@@ -271,7 +261,10 @@ int load_code(struct cpu *cpu, unsigned char *code, size_t n)
 		return -1;
 	}
 
-	memcpy(cpu->text, code, n);
+	for (int i = 0; i < n; i++) {
+		/* Load code with endian conversion */
+		cpu->text[i] = ((Word)code[i * 2]) << 8 | code[i * 2 + 1];
+	}
 
 	return 0;
 }
