@@ -11,8 +11,33 @@ struct symbol {
 	uint8_t addr;
 };
 
-static struct symbol symtable[256];
+struct instruction {
+	char *ins;
+	int size;
+	int arg;
+	uint8_t opcode;
+};
+
+static struct instruction instruction[] = {
+	{ "INBOX",	1, 0, INBOX	},
+	{ "OUTBOX",	1, 0, OUTBOX	},
+	{ "BUMPUP",	1, 1, BUMPUP	},
+	{ "BUMPDN",	1, 1, BUMPDN	},
+	{ "COPYTO",	1, 1, COPYTO	},
+	{ "COPYFROM",	1, 1, COPYFROM	},
+	{ "ADD",	1, 1, ADD	},
+	{ "SUB",	1, 1, SUB	},
+	{ "JUMP",	2, 2, JUMP	},
+	{ "JUMPZ",	2, 2, JUMPZ	},
+	{ "JUMPN",	2, 2, JUMPN	},
+	{ NULL,		0, 0, 0		}
+};
+
+static struct symbol symtable[HRM_TEXTSIZE];
+static int st_index = 0;
 static int addr;
+static uint8_t bin[HRM_TEXTSIZE];
+
 
 static void parse_line(char *l, char **label, char **instr, char **arg)
 {
@@ -40,13 +65,25 @@ static void parse_line(char *l, char **label, char **instr, char **arg)
 	}
 }
 
+static void add_symtable(char *name, int addr)
+{
+	symtable[st_index].name = strdup(name);
+	symtable[st_index].addr = addr;
+	st_index++;
+}
+
 static void pass1(FILE *f)
 {
 	char line[LINE_SIZE];
 	char *l, *label, *instr, *arg;
 
+	printf("PASS 1: ");
+
 	while (42) {
 		char *t;
+
+		printf(".");
+		fflush(stdout);
 
 		if (fgets(line, LINE_SIZE, f) == NULL) {
 			break;
@@ -72,14 +109,29 @@ static void pass1(FILE *f)
 			continue;
 		}
 
-		//printf("LINE: \"%s\"\n", l);
 		parse_line(l, &label, &instr, &arg);
-		//printf("[%s] [%s] [%s]\n\n", label, instr, arg);
+
+		if (*label) {
+			add_symtable(label, addr); 
+		}
+
+		struct instruction *ins;
+		for (ins = instruction; ins->ins; ins++) {
+			if (!strcmp(instr, ins->ins)) {
+				addr += ins->size;
+			}
+		}
+	}
+
+	printf("\nSYMBOL TABLE\n");
+	for (int i = 0; i < st_index; i++) {
+		printf("%4d ... %s\n", symtable[i].addr, symtable[i].name);
 	}
 }
 
 static void pass2(FILE *f)
 {
+	printf("PASS 2:\n");
 }
 
 static void usage(char *cmd)
@@ -105,14 +157,21 @@ int main(int argc, char **argv)
 		}
 	}
 
+	/* open source file */
 	if ((f = fopen(argv[optind], "r")) == NULL) {
 		perror(argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
+	/* pass 1: read labels and create symbol table */
 	addr = 0;
 	pass1(f);
 
+	/* pass 2: assemble code */
+	fseek(f, 0, SEEK_SET);
+	pass2(f);
+
+	/* save object code */
 
 	exit(EXIT_SUCCESS);
 }
