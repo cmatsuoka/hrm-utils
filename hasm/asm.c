@@ -97,7 +97,7 @@ static void pass1(FILE *f)
 		}
 
 		/* remove comments */
-		if (t = strstr(line, "--")) {
+		if ((t = strstr(line, "--")) != NULL) {
 			*t = 0;
 		}
 
