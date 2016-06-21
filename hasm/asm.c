@@ -16,30 +16,28 @@ struct symbol {
 
 struct instruction {
 	char *ins;
-	int size;
-	int arg;
-	uint8_t opcode;
+	Word opcode;
 };
 
 static struct instruction instruction[] = {
-	{ "INBOX",	1, 0, INBOX	},
-	{ "OUTBOX",	1, 0, OUTBOX	},
-	{ "BUMPUP",	1, 1, BUMPUP	},
-	{ "BUMPDN",	1, 1, BUMPDN	},
-	{ "COPYTO",	1, 1, COPYTO	},
-	{ "COPYFROM",	1, 1, COPYFROM	},
-	{ "ADD",	1, 1, ADD	},
-	{ "SUB",	1, 1, SUB	},
-	{ "JUMP",	2, 2, JUMP	},
-	{ "JUMPZ",	2, 2, JUMPZ	},
-	{ "JUMPN",	2, 2, JUMPN	},
-	{ NULL,		0, 0, 0		}
+	{ "INBOX",	INBOX    },
+	{ "OUTBOX",	OUTBOX   },
+	{ "BUMPUP",	BUMPUP   },
+	{ "BUMPDN",	BUMPDN   },
+	{ "COPYTO",	COPYTO   },
+	{ "COPYFROM",	COPYFROM },
+	{ "ADD",	ADD      },
+	{ "SUB",	SUB      },
+	{ "JUMP",	JUMP     },
+	{ "JUMPZ",	JUMPZ    },
+	{ "JUMPN",	JUMPN    },
+	{ NULL,		0        }
 };
 
 static struct symbol symtable[SYMTABLE_SIZE];
 static int st_index = 0;
 static int addr;
-static uint8_t bin[HRM_TEXTSIZE];
+static Word bin[HRM_TEXTSIZE];
 
 
 static void panic(char *fmt, ...)
@@ -131,7 +129,7 @@ static uint8_t get_argument(char *arg)
 
 	if (arg[0] == '[') {
 		/* indirect addressing */
-		return atoi(arg + 1) | 0x10;
+		return atoi(arg + 1) | INDIRECT_MASK;
 	} else {
 		return atoi(arg);	
 	}
@@ -142,7 +140,7 @@ static void pass1(FILE *f)
 	char line[LINE_SIZE];
 	char *l, *label, *instr, *arg;
 
-	printf("\nPASS 1: ");
+	printf("\nPASS 1:\n");
 
 	while (42) {
 		char *t;
@@ -165,7 +163,7 @@ static void pass1(FILE *f)
 		struct instruction *ins;
 		for (ins = instruction; ins->ins; ins++) {
 			if (!strcmp(instr, ins->ins)) {
-				addr += ins->size;
+				addr++;
 				break;
 			}
 		}
@@ -182,7 +180,7 @@ static void pass2(FILE *f)
 	char line[LINE_SIZE];
 	char *l, *label, *instr, *arg;
 
-	printf("\nPASS 2: ");
+	printf("\nPASS 2:\n");
 
 	while (42) {
 		char *t;
@@ -206,22 +204,20 @@ static void pass2(FILE *f)
 			struct instruction *ins;
 			for (ins = instruction; ins->ins; ins++) {
 				if (!strcmp(instr, ins->ins)) {
-					uint8_t op = ins->opcode;
+					Word op = ins->opcode;
 					printf("%3d  ", addr);
-					if (ins->arg == 0) {
+					if (op & IO_MASK) {
 						bin[addr] = op;
-						printf("%02X         %-8.8s", op, instr);
-					} else if (ins->arg == 1) {
+						printf("%02X %02X      %-8.8s", op >> 8, op & 0xff, instr);
+					} else if (op & JUMP_MASK) {
+						bin[addr] = op | 0x55;
+						printf("%02X %02X      %-8.8s %s", op >> 8, op & 0xff, instr, arg);
+					} else {
 						op |= get_argument(arg);
-						bin[addr] = op;
-						printf("%02X         %-8.8s %s", op, instr, arg);
-					} else if (ins->arg == 2) {
-						bin[addr] = op;
-						bin[addr + 1] = 0x55;
-						printf("%02X %02X      %-8.8s %s", op, bin[addr + 1], instr, arg);
+						printf("%02X %02x      %-8.8s %s", op >> 8, op & 0xff, instr, arg);
 					}
 					printf("\n");
-					addr += ins->size;
+					addr++;
 					break;
 				}
 			}
