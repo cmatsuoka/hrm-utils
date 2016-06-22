@@ -79,7 +79,7 @@ static void parse_line(char *l, char **label, char **instr, char **arg)
 	}
 }
 
-static void add_symtable(char *name, int addr)
+static void add_symbol(char *name, int addr)
 {
 	if (st_index >= SYMTABLE_SIZE) {
 		panic("too many symbols");
@@ -95,6 +95,17 @@ static void add_symtable(char *name, int addr)
 	strncpy(symtable[st_index].name, name, SYMBOL_SIZE - 1);
 	symtable[st_index].addr = addr;
 	st_index++;
+}
+
+static int get_symbol(char *name)
+{
+	for (int i = 0; i < st_index; i++) {
+		if (!strcmp(symtable[i].name, name)) {
+			return symtable[i].addr;
+		} 
+	}
+
+	return -1;
 }
 
 static char *read_line(char *l, size_t n, FILE *f)
@@ -157,7 +168,7 @@ static void pass1(FILE *f)
 		parse_line(l, &label, &instr, &arg);
 
 		if (*label) {
-			add_symtable(label, addr); 
+			add_symbol(label, addr); 
 		}
 
 		struct instruction *ins;
@@ -210,10 +221,16 @@ static void pass2(FILE *f)
 						bin[addr] = op;
 						printf("%02X %02X      %-8.8s", op >> 8, op & 0xff, instr);
 					} else if (op & JUMP_MASK) {
-						bin[addr] = op | 0x55;
+						int dest = get_symbol(arg);
+						if (dest < 0) {
+							panic("unknown label %s", arg);
+						}
+						op |= (uint8_t)(dest - (addr + 1));
+						bin[addr] = op;
 						printf("%02X %02X      %-8.8s %s", op >> 8, op & 0xff, instr, arg);
 					} else {
 						op |= get_argument(arg);
+						bin[addr] = op;
 						printf("%02X %02x      %-8.8s %s", op >> 8, op & 0xff, instr, arg);
 					}
 					printf("\n");
