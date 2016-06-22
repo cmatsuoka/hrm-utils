@@ -249,7 +249,7 @@ static void usage(char *cmd)
 
 int main(int argc, char **argv)
 {
-	FILE *f;
+	FILE *f, *fo;
 	int debug = 0;
 	int o;
 	extern int optind;
@@ -280,7 +280,22 @@ int main(int argc, char **argv)
 	addr = 0;
 	pass2(f);
 
+	fclose(f);
+
 	/* save object code */
+	printf("\nassembled %d bytes\n", addr * 2);
+	if ((fo = fopen("a.bin", "wb")) == NULL) {
+		perror(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	for (int i = 0; i < addr; i++) {
+		CodeWord x = bin[i];
+		fputc(x >> 8, fo);
+		fputc(x & 0xff, fo);
+	}
+
+	fclose(fo);
 
 	exit(EXIT_SUCCESS);
 }
