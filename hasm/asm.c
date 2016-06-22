@@ -134,13 +134,13 @@ static char *read_line(char *l, size_t n, FILE *f)
 	return l;
 }
 
-static uint8_t get_argument(char *arg)
+static Word get_argument(char *arg)
 {
 	uint8_t val;
 
 	if (arg[0] == '[') {
 		/* indirect addressing */
-		return atoi(arg + 1) | INDIRECT_MASK;
+		return atoi(arg + 1) | INDIRECT_BIT;
 	} else {
 		return atoi(arg);	
 	}
@@ -215,12 +215,12 @@ static void pass2(FILE *f)
 			struct instruction *ins;
 			for (ins = instruction; ins->ins; ins++) {
 				if (!strcmp(instr, ins->ins)) {
-					Word op = ins->opcode;
+					uint16_t op = ins->opcode;
 					printf("%3d  ", addr);
-					if (op & IO_MASK) {
+					if ((op & 0xf000) == OUTBOX) {
 						bin[addr] = op;
 						printf("%02X %02X      %-8.8s", op >> 8, op & 0xff, instr);
-					} else if (op & JUMP_MASK) {
+					} else if ((op & 0xf000) == JUMP) {
 						int dest = get_symbol(arg);
 						if (dest < 0) {
 							panic("unknown label %s", arg);
@@ -231,7 +231,7 @@ static void pass2(FILE *f)
 					} else {
 						op |= get_argument(arg);
 						bin[addr] = op;
-						printf("%02X %02x      %-8.8s %s", op >> 8, op & 0xff, instr, arg);
+						printf("%02X %02X      %-8.8s %s", op >> 8, op & 0xff, instr, arg);
 					}
 					printf("\n");
 					addr++;

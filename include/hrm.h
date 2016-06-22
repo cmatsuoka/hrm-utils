@@ -5,27 +5,25 @@
 
 /* Opcodes */
 
-#define OUTBOX		0x4000
-#define INBOX		0x4100
-#define JUMP		0x2000
-#define JUMPZ		0x2100
-#define JUMPN		0x2200
-#define ADD		0x0100
-#define ADDI		0x1100
-#define SUB		0x0200
-#define SUBI		0x1200
-#define	BUMPUP		0x0300
-#define	BUMPUPI		0x1300
-#define BUMPDN		0x0400
-#define BUMPDNI		0x1400
-#define COPYTO		0x0500
-#define COPYTOI		0x1500
-#define COPYFROM	0x0600
-#define COPYFROMI	0x1600
+#define JUMP		0x0000		/* so that 0000 is nop */
+#define JUMPZ		0x0100
+#define JUMPN		0x0200
+#define OUTBOX		0x1000
+#define INBOX		0x1100
+#define ADD		0x2000
+#define ADDI		0x3000
+#define SUB		0x4000
+#define SUBI		0x5000
+#define	BUMPUP		0x6000
+#define	BUMPUPI		0x7000
+#define BUMPDN		0x8000
+#define BUMPDNI		0x9000
+#define COPYTO		0xa000
+#define COPYTOI		0xb000
+#define COPYFROM	0xc000
+#define COPYFROMI	0xd000
 
-#define IO_MASK		0x4000
-#define JUMP_MASK	0x2000
-#define INDIRECT_MASK	0x1000
+#define INDIRECT_BIT	0x1000
 
 /* Limits and tests */
 

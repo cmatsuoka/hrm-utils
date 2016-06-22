@@ -15,23 +15,23 @@ Example HRM assembly code from level 22 (Fibonacci Visitor)::
 
     hrm code     -- HUMAN RESOURCE MACHINE PROGRAM --
                
-      0  03 09       BUMPUP   9
+      0  60 09       BUMPUP   9
                  a:
-      1  41 00       INBOX   
-      2  05 00       COPYTO   0
-      3  06 09       COPYFROM 9
-      4  05 01       COPYTO   1
-      5  05 02       COPYTO   2
+      1  11 00       INBOX   
+      2  a0 00       COPYTO   0
+      3  c0 09       COPYFROM 9
+      4  a0 01       COPYTO   1
+      5  a0 02       COPYTO   2
                  b:
-      6  40 00       OUTBOX  
-      7  06 00       COPYFROM 0
-      8  02 02       SUB      2
-      9  22 F7       JUMPN    a
-     11  06 01       COPYFROM 1
-     12  01 02       ADD      2
-     13  05 02       COPYTO   2
-     14  02 01       SUB      1
-     15  05 01       COPYTO   1
-     16  20 F6       JUMP     b
+      6  10 00       OUTBOX  
+      7  c0 00       COPYFROM 0
+      8  40 02       SUB      2
+      9  02 F7       JUMPN    a
+     11  c0 01       COPYFROM 1
+     12  20 02       ADD      2
+     13  a0 02       COPYTO   2
+     14  40 01       SUB      1
+     15  a0 01       COPYTO   1
+     16  00 F6       JUMP     b
                
        

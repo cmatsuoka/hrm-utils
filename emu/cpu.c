@@ -13,11 +13,11 @@ static void Exception(struct cpu *cpu, int num)
 
 static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 {
-	Word ins = cpu->ir & 0xff00;
+	Word ins = cpu->ir & 0xf000;
 
-	if (ins & JUMP_MASK) {
+	if (ins == JUMP) {
 		snprintf(buf, n, "%02X %02X    ", cpu->ir >> 8, cpu->dr);
-		switch (ins) {
+		switch (cpu->ir & 0xff00) {
 		case JUMP:
 			strncat(buf, "JUMP     ", n);
 			break;
@@ -31,9 +31,9 @@ static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 		char s[10];
 		snprintf(s, 10, "%d", cpu->ip + cpu->dr);
 		strncat(buf, s, n); 
-	} else if (ins & IO_MASK) {
+	} else if (ins == OUTBOX) {
 		snprintf(buf, n, "%02X 00    ", cpu->ir >> 8);
-		switch (ins) {
+		switch (cpu->ir & 0xff00) {
 		case OUTBOX:
 			strncat(buf, "OUTBOX", n);
 			break;
@@ -43,7 +43,7 @@ static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 		}
 	} else {
 		snprintf(buf, n, "%02X %02X    ", cpu->ir >> 8, cpu->ir & 0xff);
-		switch (ins & ~INDIRECT_MASK) {
+		switch (ins & ~INDIRECT_BIT) {
 		case ADD:
 			strncat(buf, "ADD     ", n);
 			break;
@@ -65,7 +65,7 @@ static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 		}
 
 		char s[10];
-		if (ins & INDIRECT_MASK) {
+		if (ins & INDIRECT_BIT) {
 			snprintf(s, 10, " [%d]", cpu->dr);
 		} else {
 			snprintf(s, 10, " %d", cpu->dr);
@@ -84,10 +84,10 @@ static void read_instruction(struct cpu *cpu)
 
 static void read_data_address(struct cpu *cpu)
 {
-	if (~cpu->ir & IO_MASK) {
+	if (cpu->ir >= 0x2000) {
 		uint8_t addr = cpu->ir & 0xff;
 		
-		if (cpu->ir & INDIRECT_MASK) {
+		if (cpu->ir & INDIRECT_BIT) {
 			if (addr >= cpu->datasize) {
 				Exception(cpu, E_OUT_OF_BOUNDS);
 			}
@@ -129,36 +129,43 @@ static void execute(struct cpu *cpu)
 		printf("\n");
 	}
 
-	Word ins = cpu->ir & 0xff00;
+	Word ins = cpu->ir & 0xf000;
 
-	switch (ins &= ~INDIRECT_MASK) {
+	switch (ins &= ~INDIRECT_BIT) {
 	case JUMP:
-		cpu->ip += cpu->dr;
-		break;
-	case JUMPZ:
-		if (ins == JUMPZ && cpu->acc == 0) {
-			cpu->ip += cpu->dr;
-		}
-		break;
-	case JUMPN:
-		if (!IS_NUMBER(cpu->acc)) {
-			Exception(cpu, E_LETTER_ARITH);
-		}
-		if (ins == JUMPN && cpu->acc < 0) {
-			cpu->ip += cpu->dr;
-		}
-		break;
 	case OUTBOX:
-		cpu->outbox(cpu->acc);
-		cpu->acc = EMPTY;
-		break;
-	case INBOX: {
-		Word val;
-		if (!cpu->inbox(&val)) {
-			Exception(cpu, E_END_OF_EXECUTION);
+		switch (cpu->ir & 0xff00) {
+		case JUMP:
+			cpu->ip += cpu->dr;
+			break;
+		case JUMPZ:
+			if (cpu->acc == 0) {
+				cpu->ip += cpu->dr;
+			}
+			break;
+		case JUMPN:
+			if (!IS_NUMBER(cpu->acc)) {
+				Exception(cpu, E_LETTER_ARITH);
+			}
+			if (cpu->acc < 0) {
+				cpu->ip += cpu->dr;
+			}
+			break;
+		case OUTBOX:
+			cpu->outbox(cpu->acc);
+			cpu->acc = EMPTY;
+			break;
+		case INBOX: {
+			Word val;
+			if (!cpu->inbox(&val)) {
+				Exception(cpu, E_END_OF_EXECUTION);
+			}
+			cpu->acc = val;
+			break; }
+		default:
+			Exception(cpu, E_ILLEGAL_INSTRUCTION);
 		}
-		cpu->acc = val;
-		break; }
+		break;	
 	case ADD:
 	case SUB:
 		data = cpu->data[cpu->dr];
