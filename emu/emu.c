@@ -6,7 +6,7 @@
 
 static char *ex[] = {
 	[E_DATA_OVERFLOW]	= "Integer overflow",
-	[E_ILLEGAL_INS]		= "Illegal instruction",
+	[E_ILLEGAL_INSTRUCTION]	= "Illegal instruction",
 	[E_END_OF_EXECUTION]	= "End of execution",
 	[E_EMPTY_DATA]		= "Empty data register",
 	[E_EMPTY_ACC]		= "Empty accumulator",

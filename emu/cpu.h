@@ -25,7 +25,7 @@ struct cpu {
 /* Exception codes */
 
 #define E_DATA_OVERFLOW		1	/* Integer overflow */
-#define E_ILLEGAL_INS		2	/* Illegal instruction */
+#define E_ILLEGAL_INSTRUCTION	2	/* Illegal instruction */
 #define E_END_OF_EXECUTION	3	/* End of execution */
 #define E_EMPTY_DATA		4	/* Empty data register */
 #define E_EMPTY_ACC		5	/* Empty accumulator */

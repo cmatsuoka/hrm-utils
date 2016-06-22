@@ -131,31 +131,34 @@ static void execute(struct cpu *cpu)
 
 	Word ins = cpu->ir & 0xff00;
 
-	if (cpu->ir & JUMP_MASK) {
-		if (ins == JUMP) {
+	switch (ins &= ~INDIRECT_MASK) {
+	case JUMP:
+		cpu->ip += cpu->dr;
+		break;
+	case JUMPZ:
+		if (ins == JUMPZ && cpu->acc == 0) {
 			cpu->ip += cpu->dr;
-		} else {
-			if (!IS_NUMBER(cpu->acc)) {
-				Exception(cpu, E_LETTER_ARITH);
-			}
-			if (ins == JUMPZ && cpu->acc == 0) {
-				cpu->ip += cpu->dr;
-			} else if (ins == JUMPN && cpu->acc < 0) {
-				cpu->ip += cpu->dr;
-			}
 		}
-	} else if (cpu->ir & IO_MASK) {
-		if (ins == OUTBOX) {
-			cpu->outbox(cpu->acc);
-			cpu->acc = EMPTY;
-		} else {
-			Word val;
-			if (!cpu->inbox(&val)) {
-				Exception(cpu, E_END_OF_EXECUTION);
-			}
-			cpu->acc = val;
+		break;
+	case JUMPN:
+		if (!IS_NUMBER(cpu->acc)) {
+			Exception(cpu, E_LETTER_ARITH);
 		}
-	} else switch (ins &= ~INDIRECT_MASK) {
+		if (ins == JUMPN && cpu->acc < 0) {
+			cpu->ip += cpu->dr;
+		}
+		break;
+	case OUTBOX:
+		cpu->outbox(cpu->acc);
+		cpu->acc = EMPTY;
+		break;
+	case INBOX: {
+		Word val;
+		if (!cpu->inbox(&val)) {
+			Exception(cpu, E_END_OF_EXECUTION);
+		}
+		cpu->acc = val;
+		break; }
 	case ADD:
 	case SUB:
 		data = cpu->data[cpu->dr];
@@ -195,6 +198,8 @@ static void execute(struct cpu *cpu)
 	case COPYFROM:
 		cpu->acc = cpu->data[cpu->dr];
 		break;
+	default:
+		Exception(cpu, E_ILLEGAL_INSTRUCTION);
 	}
 }
 
