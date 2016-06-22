@@ -274,10 +274,18 @@ int load_code(struct cpu *cpu, unsigned char *code, size_t n)
 		return -1;
 	}
 
+	n >>= 1;
+
+	printf("Load %ld instructions ", n);
+	fflush(stdout);
+
 	for (int i = 0; i < n; i++) {
 		/* Load code with endian conversion */
 		cpu->text[i] = ((CodeWord)code[i * 2]) << 8 | code[i * 2 + 1];
+		printf(".");
+		fflush(stdout);
 	}
+	printf("\n");
 
 	return 0;
 }
