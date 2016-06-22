@@ -42,7 +42,8 @@
 
 /* Types */
 
-typedef int16_t		Word;
+typedef int16_t		DataWord;
+typedef uint16_t	CodeWord;
 
 #endif
 

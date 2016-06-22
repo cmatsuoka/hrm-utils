@@ -11,12 +11,12 @@ struct cpu {
 	uint8_t ip;			/* instruction pointer */
 	uint8_t last_ip;
 	uint8_t dr;			/* data register */
-	Word ir;			/* instruction register */
-	Word acc;			/* accumulator */
-	Word data[HRM_DATASIZE];	/* data memory */
-	Word text[HRM_TEXTSIZE];	/* text memory */
-	int (*inbox)(Word *);		/* data input callback */
-	int (*outbox)(Word);		/* data output callback */
+	CodeWord ir;			/* instruction register */
+	DataWord acc;			/* accumulator */
+	DataWord data[HRM_DATASIZE];	/* data memory */
+	CodeWord text[HRM_TEXTSIZE];	/* text memory */
+	int (*inbox)(DataWord *);	/* data input callback */
+	int (*outbox)(DataWord);	/* data output callback */
 	void (*exception)(struct cpu *, int);
 	jmp_buf jmpbuf;
 	int debug;

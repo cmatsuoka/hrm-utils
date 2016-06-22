@@ -33,14 +33,14 @@ static void exception(struct cpu *cpu, int num)
 	printf("** Exception %d (%s) IP=%d\n", num, desc, cpu->last_ip);
 }
 
-static int inbox(Word *val)
+static int inbox(DataWord *val)
 {
 	printf("INBOX: ");
 	fflush(stdout);
 	return scanf("%hd", val) == 1;
 }
 
-static int outbox(Word val)
+static int outbox(DataWord val)
 {
 	printf("OUTBOX: %d\n", val);
 	return 0;

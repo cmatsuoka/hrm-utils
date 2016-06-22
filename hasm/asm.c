@@ -16,7 +16,7 @@ struct symbol {
 
 struct instruction {
 	char *ins;
-	Word opcode;
+	CodeWord opcode;
 };
 
 static struct instruction instruction[] = {
@@ -37,7 +37,7 @@ static struct instruction instruction[] = {
 static struct symbol symtable[SYMTABLE_SIZE];
 static int st_index = 0;
 static int addr;
-static Word bin[HRM_TEXTSIZE];
+static CodeWord bin[HRM_TEXTSIZE];
 
 
 static void panic(char *fmt, ...)
@@ -134,7 +134,7 @@ static char *read_line(char *l, size_t n, FILE *f)
 	return l;
 }
 
-static Word get_argument(char *arg)
+static CodeWord get_argument(char *arg)
 {
 	uint8_t val;
 
@@ -215,7 +215,7 @@ static void pass2(FILE *f)
 			struct instruction *ins;
 			for (ins = instruction; ins->ins; ins++) {
 				if (!strcmp(instr, ins->ins)) {
-					uint16_t op = ins->opcode;
+					CodeWord op = ins->opcode;
 					printf("%3d  ", addr);
 					if ((op & 0xf000) == OUTBOX) {
 						bin[addr] = op;

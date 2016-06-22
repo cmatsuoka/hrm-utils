@@ -13,7 +13,7 @@ static void Exception(struct cpu *cpu, int num)
 
 static void format_opcode(struct cpu *cpu, char *buf, size_t n)
 {
-	Word ins = cpu->ir & 0xf000;
+	CodeWord ins = cpu->ir & 0xf000;
 
 	if (ins == JUMP) {
 		snprintf(buf, n, "%02X %02X    ", cpu->ir >> 8, cpu->dr);
@@ -84,9 +84,11 @@ static void read_instruction(struct cpu *cpu)
 
 static void read_data_address(struct cpu *cpu)
 {
-	if (cpu->ir >= 0x2000) {
-		uint8_t addr = cpu->ir & 0xff;
-		
+	uint8_t addr = cpu->ir & 0xff;
+
+	if ((cpu->ir & 0xf000) == JUMP) {
+		cpu->dr= addr;
+	} else if (cpu->ir >= 0x2000) {
 		if (cpu->ir & INDIRECT_BIT) {
 			if (addr >= cpu->datasize) {
 				Exception(cpu, E_OUT_OF_BOUNDS);
@@ -98,7 +100,7 @@ static void read_data_address(struct cpu *cpu)
 	}
 }
 
-static void format_word(Word val, char *buf, size_t n)
+static void format_word(DataWord val, char *buf, size_t n)
 {
 	if (IS_EMPTY(val)) {
 		snprintf(buf, n, "-");
@@ -113,8 +115,6 @@ static void format_word(Word val, char *buf, size_t n)
 
 static void execute(struct cpu *cpu)
 {
-	Word data;
-
 	if (cpu->debug) {
 		char buf[50], s[10];
 		format_opcode(cpu, buf, 50);
@@ -129,7 +129,8 @@ static void execute(struct cpu *cpu)
 		printf("\n");
 	}
 
-	Word ins = cpu->ir & 0xf000;
+	DataWord data;
+	CodeWord ins = cpu->ir & 0xf000;
 
 	switch (ins &= ~INDIRECT_BIT) {
 	case JUMP:
@@ -156,7 +157,7 @@ static void execute(struct cpu *cpu)
 			cpu->acc = EMPTY;
 			break;
 		case INBOX: {
-			Word val;
+			DataWord val;
 			if (!cpu->inbox(&val)) {
 				Exception(cpu, E_END_OF_EXECUTION);
 			}
@@ -275,7 +276,7 @@ int load_code(struct cpu *cpu, unsigned char *code, size_t n)
 
 	for (int i = 0; i < n; i++) {
 		/* Load code with endian conversion */
-		cpu->text[i] = ((Word)code[i * 2]) << 8 | code[i * 2 + 1];
+		cpu->text[i] = ((CodeWord)code[i * 2]) << 8 | code[i * 2 + 1];
 	}
 
 	return 0;
