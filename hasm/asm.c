@@ -265,8 +265,10 @@ int main(int argc, char **argv)
 		}
 	}
 
+	char *asmname = argv[optind];
+
 	/* open source file */
-	if ((f = fopen(argv[optind], "r")) == NULL) {
+	if ((f = fopen(asmname, "r")) == NULL) {
 		perror(argv[0]);
 		exit(EXIT_FAILURE);
 	}
@@ -283,8 +285,25 @@ int main(int argc, char **argv)
 	fclose(f);
 
 	/* save object code */
-	printf("\nassembled %d bytes\n", addr * 2);
-	if ((fo = fopen("a.bin", "wb")) == NULL) {
+	printf("\nAssembled %d bytes\n", addr * 2);
+
+	char *binname = malloc(strlen(asmname) + 5);
+	if (binname == NULL) {
+		perror(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	strcpy(binname, asmname);
+
+	char *suffix = strrchr(binname, '.');
+	if (suffix == NULL) {
+		strcat(binname, ".bin");
+	} else {
+		strcpy(suffix, ".bin");
+	}
+
+	printf("Save %s\n", binname);
+
+	if ((fo = fopen(binname, "wb")) == NULL) {
 		perror(argv[0]);
 		exit(EXIT_FAILURE);
 	}
