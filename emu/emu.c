@@ -29,6 +29,9 @@ static void exception(struct cpu *cpu, int num)
 {
 	char *desc = "unknown";
 
+	if (num == E_END_OF_EXECUTION)
+		return;
+	
 	if (num < sizeof(ex)) {
 		desc = ex[num];
 	}
