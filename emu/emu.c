@@ -43,6 +43,11 @@ static int inbox(DataWord *val)
 	return scanf("%hd", val) == 1;
 }
 
+static int stdinbox(DataWord *val)
+{
+	return scanf("%hd", val) == 1;
+}
+
 static int outbox(DataWord val)
 {
 	printf("OUTBOX: %d\n", val);
@@ -51,21 +56,26 @@ static int outbox(DataWord val)
 
 static void usage(char *cmd)
 {
-	printf("Usage: %s [-d] <binfile>\n", cmd);
+	printf("Usage: %s [-d] [-s] <binfile>\n", cmd);
 	printf("  -d   show debug information\n");
+	printf("  -s   read INBOX values from STDIN\n");
 }
 
 int main(int argc, char **argv)
 {
 	int datasize = 10;
 	int debug = 0;
+	int usestdin = 0;
 	int o;
 	extern int optind;
 
-	while ((o = getopt(argc, argv, "d")) != -1) {
+	while ((o = getopt(argc, argv, "ds")) != -1) {
 		switch (o) {
 		case 'd':
 			debug = 1;
+			break;
+		case 's':
+			usestdin = 1;
 			break;
 		default:
 			usage(argv[0]);
@@ -109,7 +119,11 @@ int main(int argc, char **argv)
 
 	cpu->debug = debug;
 	cpu->exception = exception;
-	cpu->inbox = inbox;
+	if (usestdin) {
+		cpu->inbox = stdinbox;
+	} else {
+		cpu->inbox = inbox;
+	}
 	cpu->outbox = outbox;
 
 	if (load_code(cpu, code, st.st_size) < 0) {
